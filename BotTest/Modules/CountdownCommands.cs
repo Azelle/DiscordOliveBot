@@ -14,7 +14,7 @@ namespace BotTest.Modules
     // for commands to be available, and have the Context passed to them, we must inherit ModuleBase
     public class CountdownCommands : ModuleBase
     {
-        [Command("countdown")]
+        [Command("countdown", RunMode = RunMode.Async)]
         [Alias("cd")]
         public async Task CountdownCommand(int seconds = 10)
         {
@@ -22,6 +22,7 @@ namespace BotTest.Modules
             var user = Context.User;
 
             var message = await ReplyAsync($"[{user.Username}] : " + seconds);
+            await message.PinAsync();
 
             // Countdown
             for (int i = seconds - 1; i >= 0; i--)
@@ -30,6 +31,7 @@ namespace BotTest.Modules
                 await message.ModifyAsync(msg => msg.Content = $"[{user.Username}] : " + i);
             }
             await ReplyAsync("Test accomplished !");
+            await message.UnpinAsync();
         }
 
         /*[Command("countdown")]

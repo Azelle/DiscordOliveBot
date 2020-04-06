@@ -27,6 +27,7 @@ namespace BotTest.Modules
             TimeSpan targetTime = TimeSpan.FromSeconds(cd);
 
             var message = await ReplyAsync($"[{user.Username}] : " + targetTime);
+            await message.PinAsync();
 
             int ms = 500;
 
@@ -40,6 +41,7 @@ namespace BotTest.Modules
                 await message.ModifyAsync(msg => msg.Content = $"[{user.Username}] : " + temp);
             }
             await ReplyAsync("Test accomplished !");
+            await message.UnpinAsync();
         }
 
         [Command("t", RunMode = RunMode.Async)]
