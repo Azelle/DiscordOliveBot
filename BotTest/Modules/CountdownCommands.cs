@@ -19,9 +19,9 @@ namespace BotTest.Modules
         public async Task CountdownCommand(int seconds = 10)
         {
             // get user info from the Context
-            var user = Context.User;
+            IUser user = Context.User;
 
-            var message = await ReplyAsync($"[{user.Username}] : " + seconds);
+            IUserMessage message = await ReplyAsync($"[{user.Username}] : " + seconds);
             await message.PinAsync();
 
             // Countdown
@@ -33,24 +33,5 @@ namespace BotTest.Modules
             await ReplyAsync("Test accomplished !");
             await message.UnpinAsync();
         }
-
-        /*[Command("countdown")]
-        [Alias("cd")]
-        public async Task CountdownCommand(int seconds = 10, string message = "")
-        {
-            // initialize empty string builder for reply
-            var sb = new StringBuilder();
-
-            // get user info from the Context
-            var user = Context.User;
-
-            // build out the reply
-            sb.AppendLine($"[{user.Username}] has initiated a countdown for " + seconds + " seconds and added this message : ");
-            sb.AppendLine(message);
-            sb.AppendLine("I am not already coded to do it but I will soon !");
-
-            // send simple string reply
-            await ReplyAsync(sb.ToString());
-        }*/
     }
 }
