@@ -18,21 +18,21 @@ namespace BotTest.Modules
         [Alias("cd")]
         public async Task CountdownCommand(int seconds = 10)
         {
-            // initialize empty string builder for reply
-            var sb = new StringBuilder();
-
             // get user info from the Context
             var user = Context.User;
 
-            // build out the reply
-            sb.AppendLine($"[{user.Username}] has initiated a countdown for " + seconds + " seconds");
-            sb.AppendLine("I am not already coded to do it but I will soon !");
+            var message = await ReplyAsync($"[{user.Username}] : " + seconds);
 
-            // send simple string reply
-            await ReplyAsync(sb.ToString());
+            // Countdown
+            for (int i = seconds - 1; i >= 0; i--)
+            {
+                System.Threading.Thread.Sleep(1000);
+                await message.ModifyAsync(msg => msg.Content = $"[{user.Username}] : " + i);
+            }
+            await ReplyAsync("Test accomplished !");
         }
 
-        [Command("countdown")]
+        /*[Command("countdown")]
         [Alias("cd")]
         public async Task CountdownCommand(int seconds = 10, string message = "")
         {
@@ -49,6 +49,6 @@ namespace BotTest.Modules
 
             // send simple string reply
             await ReplyAsync(sb.ToString());
-        }
+        }*/
     }
 }
