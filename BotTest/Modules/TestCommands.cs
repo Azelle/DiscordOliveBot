@@ -17,48 +17,74 @@ namespace BotTest.Modules
 {
     public class TestCommands : ModuleBase
     {
-        //static IUserMessage message;
-        //static IUser user;
-
-        [Command("test", RunMode = RunMode.Async)]
-        public async Task TestCommand(int cd = 10)
+        [Command("t", RunMode = RunMode.Async)]
+        public async Task Test2Command(int cd = 10, int period = 1, int startDelay = 0)
         {
             // get user info from the Context
             IUser user = Context.User;
-            //Timer timer = new Timer(1000);
-            //timer.Elapsed += OnTimedEvent;
-            //timer.AutoReset = true;
-            //timer.Enabled = true;
-            //TimeSpan timeSpan = timer.Elapsed;
             TimeSpan targetTime = TimeSpan.FromSeconds(cd);
-            
+            DateTime startTime = DateTime.Now;
+            DateTime endTime = startTime + targetTime;
+            int lastCount = cd;
 
-            IUserMessage message = await ReplyAsync($"[{user.Username}] : 0");
+            IUserMessage message = await ReplyAsync($"[{user.Username}] : " + cd);
+            Console.WriteLine(cd + " @ " + DateTime.Now);
+            // Create an AutoResetEvent to signal the timeout threshold in the
+            // timer callback has been reached.
+            //AutoResetEvent autoEvent = new AutoResetEvent(false);
+
+            //StatusChecker statusChecker = new StatusChecker(cd, message, user.Username);
+            //Timer timer = new Timer(statusChecker.CheckStatus, autoEvent, startDelay * 1000, period * 1000);
+
+            //int i = 0;
+
+            while (DateTime.Now < endTime)
+            {
+                int count = (endTime - DateTime.Now).Seconds;
+                if (count != lastCount)
+                {
+                    lastCount = count;
+                    Console.WriteLine(count + " @ " + DateTime.Now);
+                    await message.ModifyAsync(msg => msg.Content = $"[{user.Username}] : " + count);
+                    Console.WriteLine("after await @ " + DateTime.Now);
+                }
+                /*else
+                {
+                    i++;
+                    Console.WriteLine("Too fast " + i + " @ " + DateTime.Now);
+                }*/
+            }
+
+            //autoEvent.WaitOne();
+            //autoEvent.Dispose();
+            //timer.Dispose();
+            Console.WriteLine("just before end @ " + DateTime.Now);
+            await ReplyAsync("Test accomplished !");
+            Console.WriteLine("end @ " + DateTime.Now);
+        }
+
+        [Command("test", RunMode = RunMode.Async)]
+        public async Task TestCommand(int cd = 10, int period = 1, int startDelay = 0)
+        {
+            // get user info from the Context
+            IUser user = Context.User;
+            TimeSpan targetTime = TimeSpan.FromSeconds(cd);
+
+            IUserMessage message = await ReplyAsync($"[{user.Username}] : " + cd);
+            Console.WriteLine(cd + " @ " + DateTime.Now);
             // Create an AutoResetEvent to signal the timeout threshold in the
             // timer callback has been reached.
             AutoResetEvent autoEvent = new AutoResetEvent(false);
 
-            StatusChecker statusChecker = new StatusChecker(10, message, user.Username);
-            //await message.PinAsync();
-            Timer timer = new Timer(statusChecker.CheckStatus, autoEvent, 0, 1000);
-            //int ms = 50;
+            StatusChecker statusChecker = new StatusChecker(cd, message, user.Username);
+            Timer timer = new Timer(statusChecker.CheckStatus, autoEvent, startDelay * 1000, period * 1000);
 
-            // Countdown
-            /*while (targetTime > timeSpan)
-            {
-                System.Threading.Thread.Sleep(ms);
-                //TimeSpan temp = targetTime - timeSpan;
-                timeSpan = stopWatch.Elapsed;
-                //ms = temp.Milliseconds;
-                await message.ModifyAsync(msg => msg.Content = $"[{user.Username}] : " + timeSpan.Hours + "H" + timeSpan.Minutes + "m" + timeSpan.Seconds + "s" + timeSpan.Milliseconds);
-            }*/
-            //timer.Stop();
-            //timer.Dispose();
             autoEvent.WaitOne();
             autoEvent.Dispose();
             timer.Dispose();
+            Console.WriteLine("just before end @ " + DateTime.Now);
             await ReplyAsync("Test accomplished !");
-            //await message.UnpinAsync();
+            Console.WriteLine("end @ " + DateTime.Now);
         }
 
         class StatusChecker
@@ -81,66 +107,16 @@ namespace BotTest.Modules
             public void CheckStatus(Object stateInfo)
             {
                 AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
-                /*Console.WriteLine("{0} Checking status {1,2}.",
-                    DateTime.Now.ToString("h:mm:ss.fff"),
-                    (*/
-                    --invokeCount//).ToString())
-                    ;
-                msg.ModifyAsync(msg => msg.Content = user + " : " + invokeCount);
-
-                if (invokeCount == minCount)
+                invokeCount -= 1;
+                if (invokeCount <= minCount)
                 {
-                    // Reset the counter and signal the waiting thread.
-                    //invokeCount = 0;
+                    Console.WriteLine("end of timer @ " + DateTime.Now);
                     autoEvent.Set();
+                    return;
                 }
+                msg.ModifyAsync(msg => msg.Content = user + " : " + invokeCount);
+                Console.WriteLine(invokeCount + " @ " + DateTime.Now);
             }
         }
-
-
-        /*private static void OnTimedEvent(Object source, ElapsedEventArgs e)
-        {
-            message.ModifyAsync(msg => msg.Content = $"[{user.Username}] : " + e.SignalTime);
-        }*/
-
-        /*[Command("t", RunMode = RunMode.Async)]
-        public async Task TCommand(int cd = 10)
-        {
-            // Initialize a queue and a CountdownEvent
-            ConcurrentQueue<int> queue = new ConcurrentQueue<int>(Enumerable.Range(0, cd * 1000));
-            CountdownEvent cde = new CountdownEvent(cd * 1000); // initial count = 10000
-
-            // This is the logic for all queue consumers
-            Action consumer = () =>
-            {
-                int local;
-                // decrement CDE count once for each element consumed from queue
-                while (queue.TryDequeue(out local)) cde.Signal();
-            };
-
-            cde.Wait();
-
-            // get user info from the Context
-            var user = Context.User;
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-            TimeSpan timeSpan = stopWatch.Elapsed;
-            TimeSpan targetTime = TimeSpan.FromSeconds(cd);
-
-            var message = await ReplyAsync($"[{user.Username}] : " + targetTime);
-
-            int ms = 500;
-
-            // Countdown
-            while (targetTime > timeSpan)
-            {
-                System.Threading.Thread.Sleep(ms);
-                TimeSpan temp = targetTime - timeSpan;
-                timeSpan = stopWatch.Elapsed;
-                //ms = temp.Milliseconds;
-                await message.ModifyAsync(msg => msg.Content = $"[{user.Username}] : " + temp);
-            }
-            await ReplyAsync("Test accomplished !");
-        }*/
     }
 }
